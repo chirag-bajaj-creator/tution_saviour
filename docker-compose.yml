@@ -1,0 +1,58 @@
+version: '3.8'
+
+services:
+  mongodb:
+    image: mongo:latest
+    container_name: tutor-mongodb
+    restart: always
+    ports:
+      - "27017:27017"
+    environment:
+      MONGO_INITDB_ROOT_USERNAME: admin
+      MONGO_INITDB_ROOT_PASSWORD: password123
+      MONGO_INITDB_DATABASE: tutor-system
+    volumes:
+      - mongodb_data:/data/db
+      - mongodb_config:/data/configdb
+    networks:
+      - tutor-network
+    healthcheck:
+      test: echo 'db.runCommand("ping").ok' | mongosh localhost:27017/test --quiet
+      interval: 10s
+      timeout: 5s
+      retries: 5
+
+  backend:
+    build:
+      context: ./backend
+      dockerfile: Dockerfile
+    container_name: tutor-backend
+    restart: always
+    ports:
+      - "5000:5000"
+    environment:
+      MONGODB_URI: mongodb://admin:password123@mongodb:27017/tutor-system?authSource=admin
+      JWT_SECRET: your-super-secret-key-here-min-32-chars-long
+      CLOUDINARY_CLOUD_NAME: ${CLOUDINARY_CLOUD_NAME}
+      CLOUDINARY_API_KEY: ${CLOUDINARY_API_KEY}
+      CLOUDINARY_API_SECRET: ${CLOUDINARY_API_SECRET}
+      SENDGRID_API_KEY: ${SENDGRID_API_KEY}
+      SENDGRID_FROM_EMAIL: noreply@tutorsystem.com
+      CORS_ORIGINS: http://localhost:5173,http://localhost:5174,http://localhost:5175
+      NODE_ENV: development
+      PORT: 5000
+    depends_on:
+      mongodb:
+        condition: service_healthy
+    networks:
+      - tutor-network
+    volumes:
+      - ./backend/src:/app/src
+
+volumes:
+  mongodb_data:
+  mongodb_config:
+
+networks:
+  tutor-network:
+    driver: bridge
