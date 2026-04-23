@@ -2,6 +2,7 @@ import { useState } from 'react'
 import { useNavigate } from 'react-router-dom'
 import { CheckCircle, Search } from 'lucide-react'
 import api from '../services/api'
+import { useAuth } from '../hooks/useAuth'
 
 export default function Setup() {
   const [childName, setChildName] = useState('')
@@ -12,6 +13,7 @@ export default function Setup() {
   const [loading, setLoading] = useState(false)
   const [error, setError] = useState('')
   const navigate = useNavigate()
+  const { logout, openLoginModal } = useAuth()
 
   const handleSearch = async (e) => {
     e.preventDefault()
@@ -29,6 +31,13 @@ export default function Setup() {
       setStudents(data)
       setStep(2)
     } catch (err) {
+      if (err.response?.status === 403) {
+        logout()
+        openLoginModal()
+        setError('Please login with a parent account before searching for your child.')
+        return
+      }
+
       setError(err.response?.data?.error || 'Student not found')
     } finally {
       setLoading(false)

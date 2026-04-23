@@ -11,10 +11,13 @@ const getStats = async (req, res) => {
     // Today's Attendance
     const today = new Date();
     today.setHours(0, 0, 0, 0);
-    const todayAttendance = await Attendance.countDocuments({
-      date: { $gte: today },
+    const tomorrow = new Date(today);
+    tomorrow.setDate(tomorrow.getDate() + 1);
+    const presentStudentIds = await Attendance.distinct('studentId', {
+      date: { $gte: today, $lt: tomorrow },
       status: 'present',
     });
+    const todayAttendance = presentStudentIds.length;
 
     // Pending Fees (unpaid)
     const pendingFeesRecords = await Fee.find({ isPaid: false });

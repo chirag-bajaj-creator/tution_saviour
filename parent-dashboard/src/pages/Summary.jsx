@@ -1,34 +1,49 @@
 import { useState, useEffect } from 'react'
+import { useNavigate } from 'react-router-dom'
 import BottomNav from '../components/BottomNav'
 import { parentAPI } from '../services/api'
+import { subscribeToRealtime } from '../services/socket'
 import { RefreshCw, LogOut } from 'lucide-react'
+import { useAuth } from '../hooks/useAuth'
 
 export default function Summary() {
   const [data, setData] = useState(null)
   const [loading, setLoading] = useState(true)
   const [error, setError] = useState('')
+  const navigate = useNavigate()
+  const { openLogoutModal } = useAuth()
 
   useEffect(() => {
     fetchSummary()
   }, [])
 
-  const fetchSummary = async () => {
+  useEffect(() => {
+    const refreshSummary = () => {
+      fetchSummary({ preserveLoadingState: true })
+    }
+
+    return subscribeToRealtime(
+      ['attendance:updated', 'performance:updated', 'fees:updated'],
+      refreshSummary,
+    )
+  }, [])
+
+  const fetchSummary = async ({ preserveLoadingState = false } = {}) => {
     try {
-      setLoading(true)
+      if (!preserveLoadingState) {
+        setLoading(true)
+      }
       const { data } = await parentAPI.getSummary()
       setData(data)
     } catch (err) {
+      if (err.response?.status === 403) {
+        navigate('/setup')
+        return
+      }
       setError('Failed to load summary')
     } finally {
       setLoading(false)
     }
-  }
-
-  const handleLogout = () => {
-    localStorage.removeItem('parentToken')
-    localStorage.removeItem('parentId')
-    localStorage.removeItem('childId')
-    window.location.href = '/'
   }
 
   if (loading) return <div className="flex items-center justify-center min-h-screen">Loading...</div>
@@ -46,7 +61,8 @@ export default function Summary() {
             <p className="text-xs opacity-70 mt-1">Last updated: {data?.lastUpdated}</p>
           </div>
           <button
-            onClick={handleLogout}
+            type="button"
+            onClick={(event) => openLogoutModal(event.currentTarget)}
             className="hover:bg-white hover:bg-opacity-20 p-2 rounded-xl transition"
             title="Logout"
           >

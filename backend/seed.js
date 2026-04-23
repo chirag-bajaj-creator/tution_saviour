@@ -7,6 +7,7 @@ const User = require('./src/models/User');
 const Fee = require('./src/models/Fee');
 const Attendance = require('./src/models/Attendance');
 const Performance = require('./src/models/Performance');
+const ParentAccess = require('./src/models/ParentAccess');
 
 const firstNames = [
   'Aarav', 'Vivaan', 'Arjun', 'Reyansh', 'Aditya', 'Ishaan', 'Diya', 'Ananya', 'Isha', 'Priya',
@@ -22,10 +23,17 @@ const generatePhone = () => {
   return '98' + Math.floor(Math.random() * 10000000000).toString().padStart(8, '0');
 };
 
-const generateStudent = (batchId, userId) => ({
-  name: firstNames[Math.floor(Math.random() * firstNames.length)] + ' ' + lastNames[Math.floor(Math.random() * lastNames.length)],
-  class: classes[Math.floor(Math.random() * classes.length)],
-  parentName: firstNames[Math.floor(Math.random() * firstNames.length)] + ' ' + lastNames[Math.floor(Math.random() * lastNames.length)],
+const generateUniqueName = (index) => {
+  const firstName = firstNames[index % firstNames.length];
+  const lastName = lastNames[Math.floor(index / firstNames.length) % lastNames.length];
+  const serial = String(index + 1).padStart(3, '0');
+  return `${firstName} ${lastName} ${serial}`;
+};
+
+const generateStudent = (batchId, userId, index) => ({
+  name: generateUniqueName(index),
+  class: classes[index % classes.length],
+  parentName: `Parent ${String(index + 1).padStart(3, '0')}`,
   parentContact: generatePhone(),
   batchId,
   teacherId: userId,
@@ -44,6 +52,7 @@ const seedDatabase = async () => {
     await Student.deleteMany({});
     await Batch.deleteMany({});
     await Teacher.deleteMany({});
+    await ParentAccess.deleteMany({});
     await User.deleteMany({});
 
     // Create users first (teachers need to reference users)
@@ -85,14 +94,16 @@ const seedDatabase = async () => {
     // Create 150 students (50 per batch)
     console.log('👨‍🎓 Creating 150 students (50 per batch)...');
     const students = [];
+    const parentUsers = [];
 
     for (let batchIndex = 0; batchIndex < batches.length; batchIndex++) {
       console.log(`  Batch ${batchIndex + 1}: Creating 50 students...`);
       const batchStudents = [];
 
       for (let i = 0; i < 50; i++) {
+        const studentIndex = batchIndex * 50 + i;
         batchStudents.push(
-          generateStudent(batches[batchIndex]._id, users[batchIndex]._id)
+          generateStudent(batches[batchIndex]._id, users[batchIndex + 1]._id, studentIndex)
         );
       }
 
@@ -100,6 +111,27 @@ const seedDatabase = async () => {
       students.push(...createdStudents);
       console.log(`  ✅ Batch ${batchIndex + 1} complete: ${createdStudents.length} students added`);
     }
+
+    console.log('ðŸ‘ª Creating parent users and linking student access...');
+    const parentAccessRecords = [];
+    for (let i = 0; i < students.length; i++) {
+      const parentNumber = String(i + 1).padStart(3, '0');
+      const parentUser = new User({
+        email: `parent${parentNumber}@tutorapp.com`,
+        passwordHash: 'password123',
+        role: 'parent',
+      });
+      await parentUser.save();
+      parentUsers.push(parentUser);
+
+      parentAccessRecords.push({
+        userId: parentUser._id,
+        studentId: students[i]._id,
+      });
+    }
+
+    await ParentAccess.insertMany(parentAccessRecords);
+    console.log(`âœ… Created ${parentUsers.length} parent users and ${parentAccessRecords.length} access links`);
 
     // Create fees for all students
     console.log('💰 Creating fees for all students...');
@@ -169,10 +201,13 @@ const seedDatabase = async () => {
     console.log(`   - Teachers: ${teachers.length}`);
     console.log(`   - Batches: ${batches.length}`);
     console.log(`   - Students: ${students.length}`);
+    console.log(`   - Parent Users: ${parentUsers.length}`);
+    console.log(`   - Parent Access Links: ${parentAccessRecords.length}`);
     console.log(`   - Fees: ${fees.length}`);
     console.log(`   - Attendance Records: ${attendance.length}`);
     console.log(`   - Performance Records: ${performance.length}`);
     console.log(`   - Students per batch: 50`);
+    console.log(`   - Example parent login: parent001@tutorapp.com / password123`);
 
     await mongoose.connection.close();
     console.log('🔌 Database connection closed');

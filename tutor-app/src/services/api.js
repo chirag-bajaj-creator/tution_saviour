@@ -1,6 +1,8 @@
 import axios from 'axios'
+import { requireAuthEvent } from '../hooks/useAuth'
 
-const API_URL = import.meta.env.VITE_API_URL || 'http://localhost:5001'
+const RAW_API_URL = import.meta.env.VITE_API_URL || 'http://localhost:5001'
+const API_URL = RAW_API_URL === '/api' ? '' : RAW_API_URL.replace(/\/api\/?$/, '')
 
 const api = axios.create({
   baseURL: API_URL,
@@ -28,7 +30,7 @@ api.interceptors.response.use(
     if (error.response?.status === 401) {
       localStorage.removeItem('token')
       localStorage.removeItem('user')
-      window.location.href = '/auth'
+      window.dispatchEvent(new Event(requireAuthEvent))
     }
     return Promise.reject(error)
   }

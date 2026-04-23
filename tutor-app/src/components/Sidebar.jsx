@@ -4,7 +4,7 @@ import { useAuth } from '../hooks/useAuth'
 
 export const Sidebar = () => {
   const location = useLocation()
-  const { logout } = useAuth()
+  const { openLogoutModal } = useAuth()
 
   const menuItems = [
     { path: '/dashboard', label: 'Dashboard', icon: LayoutDashboard },
@@ -18,7 +18,7 @@ export const Sidebar = () => {
   const isActive = (path) => location.pathname === path
 
   return (
-    <div className="w-64 bg-white border-r border-sectionBg h-screen flex flex-col">
+    <div className="app-sidebar w-64 bg-white border-r border-sectionBg h-screen flex flex-col">
       <div className="p-6 border-b border-sectionBg">
         <h1 className="text-xl font-bold text-primary">TutorHub</h1>
       </div>
@@ -45,10 +45,8 @@ export const Sidebar = () => {
 
       <div className="p-4 border-t border-sectionBg">
         <button
-          onClick={() => {
-            logout()
-            window.location.href = '/'
-          }}
+          type="button"
+          onClick={(event) => openLogoutModal(event.currentTarget)}
           className="w-full flex items-center space-x-3 px-4 py-3 text-danger hover:bg-red-50 rounded-lg transition"
         >
           <LogOut size={20} />

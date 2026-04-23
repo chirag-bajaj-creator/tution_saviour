@@ -1,6 +1,7 @@
 import axios from 'axios'
+import { requireAuthEvent } from '../hooks/useAuth'
 
-const API_BASE = import.meta.env.VITE_API_URL || 'http://localhost:3000/api'
+const API_BASE = import.meta.env.VITE_API_URL || 'http://localhost:5001/api'
 
 const api = axios.create({
   baseURL: API_BASE,
@@ -14,6 +15,19 @@ api.interceptors.request.use((config) => {
   }
   return config
 })
+
+api.interceptors.response.use(
+  (response) => response,
+  (error) => {
+    if (error.response?.status === 401) {
+      localStorage.removeItem('parentToken')
+      localStorage.removeItem('parentId')
+      localStorage.removeItem('childId')
+      window.dispatchEvent(new Event(requireAuthEvent))
+    }
+    return Promise.reject(error)
+  },
+)
 
 export const parentAPI = {
   login: (email, password) => api.post('/parent/login', { email, password }),

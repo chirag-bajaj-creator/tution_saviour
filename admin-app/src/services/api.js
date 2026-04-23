@@ -1,6 +1,8 @@
 import axios from 'axios'
+import { requireAuthEvent } from '../hooks/useAuth'
 
-const API_URL = import.meta.env.VITE_API_URL || 'http://localhost:5000'
+const RAW_API_URL = import.meta.env.VITE_API_URL || 'http://localhost:5001'
+const API_URL = RAW_API_URL === '/api' ? '' : RAW_API_URL.replace(/\/api\/?$/, '')
 
 const api = axios.create({
   baseURL: API_URL,
@@ -21,7 +23,7 @@ api.interceptors.response.use(
     if (error.response?.status === 401) {
       localStorage.removeItem('admin_token')
       localStorage.removeItem('admin_user')
-      window.location.href = '/auth'
+      window.dispatchEvent(new Event(requireAuthEvent))
     }
     return Promise.reject(error)
   }
@@ -29,6 +31,8 @@ api.interceptors.response.use(
 
 export const adminApi = {
   // Auth
+  signup: (email, password, name, phone) =>
+    api.post('/api/auth/signup', { email, password, name, phone, role: 'admin' }),
   login: (email, password) => api.post('/api/auth/login', { email, password }),
 
   // Teachers

@@ -2,7 +2,7 @@ import { useState, useEffect } from 'react'
 import { Sidebar } from '../components/Sidebar'
 import { Navbar } from '../components/Navbar'
 import tutorApi from '../services/api'
-import socket from '../services/socket'
+import { subscribeToRealtime } from '../services/socket'
 import { Plus } from 'lucide-react'
 
 export const Performance = () => {
@@ -44,11 +44,7 @@ export const Performance = () => {
       fetchData()
     }
 
-    socket.on('performance:updated', handlePerformanceUpdate)
-
-    return () => {
-      socket.off('performance:updated', handlePerformanceUpdate)
-    }
+    return subscribeToRealtime('performance:updated', handlePerformanceUpdate)
   }, [])
 
   const handleSubmit = async (e) => {

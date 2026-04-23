@@ -1,14 +1,16 @@
 import { useNavigate, useSearchParams } from 'react-router-dom'
 import { Link as LinkIcon } from 'lucide-react'
+import { useAuth } from '../hooks/useAuth'
 
 export default function ParentAccess() {
   const navigate = useNavigate()
   const [searchParams] = useSearchParams()
   const sharedToken = searchParams.get('token')
+  const { login } = useAuth()
 
   const handleAccessReport = () => {
     if (sharedToken) {
-      localStorage.setItem('parentToken', sharedToken)
+      login(sharedToken)
       navigate('/summary')
     }
   }

@@ -1,15 +1,8 @@
-import { useNavigate } from 'react-router-dom'
 import { useAuth } from '../hooks/useAuth'
 import { LogOut, Bell, User } from 'lucide-react'
 
 export const Navbar = () => {
-  const navigate = useNavigate()
-  const { user, logout } = useAuth()
-
-  const handleLogout = () => {
-    logout()
-    navigate('/auth')
-  }
+  const { user, openLogoutModal } = useAuth()
 
   return (
     <nav className="bg-white border-b border-sectionBg px-8 py-4 flex items-center justify-between">
@@ -39,7 +32,8 @@ export const Navbar = () => {
 
         {/* Logout Button */}
         <button
-          onClick={handleLogout}
+          type="button"
+          onClick={(event) => openLogoutModal(event.currentTarget)}
           className="ml-2 p-2 text-red-600 hover:bg-red-50 rounded-lg transition"
           title="Logout"
         >

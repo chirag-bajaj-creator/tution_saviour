@@ -4,12 +4,22 @@ const http = require('http');
 const socketIo = require('socket.io');
 const app = require('./app');
 
+const parseCorsOrigins = () => (
+  process.env.CORS_ORIGINS
+    ? process.env.CORS_ORIGINS.split(',').map(url => url.trim()).filter(Boolean)
+    : []
+);
+
+const corsOrigins = parseCorsOrigins();
+const allowAllOrigins = corsOrigins.length === 0;
+
 // Create HTTP server for Socket.io
 const httpServer = http.createServer(app);
 const io = socketIo(httpServer, {
   cors: {
-    origin: '*',
-    methods: ['GET', 'POST']
+    origin: allowAllOrigins ? true : corsOrigins,
+    methods: ['GET', 'POST'],
+    credentials: !allowAllOrigins,
   }
 });
 
@@ -35,8 +45,9 @@ const connectDB = async (retries = 5) => {
     });
     console.log('✅ MongoDB connected');
     httpServer.listen(process.env.PORT || 5000, () => {
+      const publicUrl = process.env.PUBLIC_API_URL || `http://localhost:${process.env.PORT || 5000}`;
       console.log(`✅ Server running on port ${process.env.PORT || 5000}`);
-      console.log(`✅ WebSocket ready at ws://localhost:${process.env.PORT || 5000}`);
+      console.log(`✅ WebSocket ready at ${publicUrl.replace(/^http/, 'ws')}`);
     });
   } catch (err) {
     if (retries > 0) {

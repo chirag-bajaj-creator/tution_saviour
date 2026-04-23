@@ -13,7 +13,7 @@ export const Sidebar = () => {
   ]
 
   return (
-    <aside className="w-64 bg-gradient-to-b from-indigo-900 to-indigo-800 text-white flex flex-col h-screen">
+    <aside className="app-sidebar w-64 bg-gradient-to-b from-indigo-900 to-indigo-800 text-white flex flex-col h-screen">
       {/* Logo */}
       <div className="p-6 border-b border-indigo-700">
         <div className="flex items-center gap-2">

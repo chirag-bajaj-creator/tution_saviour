@@ -5,16 +5,20 @@ const app = express();
 
 app.use(express.json());
 
-// CORS configuration
-const corsOrigins = process.env.CORS_ORIGINS
-  ? process.env.CORS_ORIGINS.split(',').map(url => url.trim())
-  : ['*'];
+const parseCorsOrigins = () => (
+  process.env.CORS_ORIGINS
+    ? process.env.CORS_ORIGINS.split(',').map(url => url.trim()).filter(Boolean)
+    : []
+);
+
+const corsOrigins = parseCorsOrigins();
+const allowAllOrigins = corsOrigins.length === 0;
 
 console.log('✅ CORS Origins configured:', corsOrigins);
 
 app.use(cors({
-  origin: corsOrigins,
-  credentials: true,
+  origin: allowAllOrigins ? true : corsOrigins,
+  credentials: !allowAllOrigins,
   methods: ['GET', 'POST', 'PUT', 'DELETE', 'OPTIONS', 'PATCH'],
   allowedHeaders: ['Content-Type', 'Authorization'],
 }));

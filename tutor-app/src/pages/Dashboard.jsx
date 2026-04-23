@@ -40,6 +40,11 @@ export const Dashboard = () => {
     )
   }
 
+  const totalStudents = stats?.totalStudents || 0
+  const todayAttendance = Math.min(stats?.todayAttendance || 0, totalStudents)
+  const attendancePercent = totalStudents > 0 ? Math.round((todayAttendance / totalStudents) * 100) : 0
+  const absentToday = Math.max(totalStudents - todayAttendance, 0)
+
   return (
     <div className="flex h-screen bg-pageBg">
       <Sidebar />
@@ -71,10 +76,10 @@ export const Dashboard = () => {
                 />
                 <StatCard
                   title="Today's Attendance"
-                  value={stats.todayAttendance || 0}
+                  value={todayAttendance}
                   icon={Calendar}
                   color="success"
-                  trend={`${Math.round((stats.todayAttendance / stats.totalStudents) * 100)}%`}
+                  trend={`${attendancePercent}%`}
                 />
                 <StatCard
                   title="Pending Fees"
@@ -103,12 +108,12 @@ export const Dashboard = () => {
                     <div>
                       <div className="flex justify-between mb-2">
                         <span className="text-sm text-secondaryText">Present Today</span>
-                        <span className="font-semibold text-primaryText">{stats.todayAttendance}/{stats.totalStudents}</span>
+                        <span className="font-semibold text-primaryText">{todayAttendance}/{totalStudents}</span>
                       </div>
                       <div className="w-full bg-sectionBg rounded-full h-3 overflow-hidden">
                         <div
                           className="bg-gradient-to-r from-green-400 to-green-600 h-full rounded-full"
-                          style={{width: `${Math.round((stats.todayAttendance / stats.totalStudents) * 100)}%`}}
+                          style={{width: `${attendancePercent}%`}}
                         ></div>
                       </div>
                     </div>
@@ -119,7 +124,7 @@ export const Dashboard = () => {
                       </div>
                       <div className="bg-red-50 p-4 rounded-lg">
                         <p className="text-xs text-secondaryText mb-1">Absent Today</p>
-                        <p className="text-2xl font-bold text-red-600">{stats.totalStudents - stats.todayAttendance}</p>
+                        <p className="text-2xl font-bold text-red-600">{absentToday}</p>
                       </div>
                     </div>
                   </div>

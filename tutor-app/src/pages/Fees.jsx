@@ -30,41 +30,30 @@ export const Fees = () => {
           tutorApi.getStudents(),
         ])
 
-        console.log('Raw fees response:', feesRes.data[0]);
-        console.log('Raw students response:', studentsRes.data[0]);
-
         // Create student map for quick lookup
         const studentMap = {};
         studentsRes.data.forEach(student => {
-          console.log('Adding to map:', student._id, student.name);
           studentMap[student._id] = student;
         });
 
-        console.log('Student map keys:', Object.keys(studentMap).slice(0, 5));
-
         // Enhance fees with student data
         const enhancedFees = feesRes.data.map(fee => {
-          let studentIdValue = fee.studentId;
+          if (fee.studentId && typeof fee.studentId === 'object' && fee.studentId.name) {
+            return fee;
+          }
 
-          console.log('Fee studentId:', studentIdValue, 'Type:', typeof studentIdValue);
+          const studentIdStr =
+            fee.studentId && typeof fee.studentId === 'object'
+              ? fee.studentId._id?.toString?.() || ''
+              : fee.studentId?.toString?.() || String(fee.studentId);
 
-          // Convert ObjectId to string
-          const studentIdStr = studentIdValue?.toString ? studentIdValue.toString() : String(studentIdValue);
-
-          console.log('Converted studentIdStr:', studentIdStr);
-
-          // Look up student in map
           const student = studentMap[studentIdStr];
-
-          console.log('Found student:', student?.name || 'NOT FOUND');
 
           return {
             ...fee,
             studentId: student || { _id: studentIdStr, name: 'Unknown' }
           };
         });
-
-        console.log('Enhanced fees:', enhancedFees.slice(0, 2));
         setFees(enhancedFees)
         setStudents(studentsRes.data)
       } catch (err) {

@@ -3,13 +3,14 @@ import { Sidebar } from '../components/Sidebar'
 import { Navbar } from '../components/Navbar'
 import { AttendanceRow } from '../components/AttendanceRow'
 import tutorApi from '../services/api'
-import socket from '../services/socket'
+import { subscribeToRealtime } from '../services/socket'
 
 export const Attendance = () => {
   const [students, setStudents] = useState([])
   const [batches, setBatches] = useState([])
   const [selectedDate, setSelectedDate] = useState(new Date().toISOString().split('T')[0])
   const [selectedBatch, setSelectedBatch] = useState('')
+  const [searchQuery, setSearchQuery] = useState('')
   const [attendance, setAttendance] = useState({})
   const [loading, setLoading] = useState(true)
 
@@ -43,19 +44,23 @@ export const Attendance = () => {
       fetchData()
     }
 
-    socket.on('attendance:updated', handleAttendanceUpdate)
-
-    return () => {
-      socket.off('attendance:updated', handleAttendanceUpdate)
-    }
+    return subscribeToRealtime('attendance:updated', handleAttendanceUpdate)
   }, [])
 
-  const filteredStudents = selectedBatch
+  const batchFilteredStudents = selectedBatch
     ? students.filter(s => {
         const batchId = typeof s.batchId === 'object' ? s.batchId._id : s.batchId;
         return batchId.toString() === selectedBatch;
       })
     : students
+  const normalizedSearch = searchQuery.trim().toLowerCase()
+  const filteredStudents = normalizedSearch
+    ? batchFilteredStudents.filter((student) =>
+        [student.name, student.class, student.parentName, student.parentContact]
+          .filter(Boolean)
+          .some((value) => String(value).toLowerCase().includes(normalizedSearch)),
+      )
+    : batchFilteredStudents
 
   const handleMarkAttendance = (studentId, isAbsent) => {
     if (isAbsent) {
@@ -111,7 +116,7 @@ export const Attendance = () => {
           </div>
 
           <div className="bg-cardBg rounded-lg shadow-sm p-6 mb-6">
-            <div className="grid md:grid-cols-2 gap-4">
+            <div className="grid gap-4 md:grid-cols-3">
               <div>
                 <label className="block text-sm font-medium text-primaryText mb-2">Date</label>
                 <input
@@ -135,6 +140,16 @@ export const Attendance = () => {
                   ))}
                 </select>
               </div>
+              <div>
+                <label className="block text-sm font-medium text-primaryText mb-2">Search Student</label>
+                <input
+                  type="search"
+                  value={searchQuery}
+                  onChange={(e) => setSearchQuery(e.target.value)}
+                  placeholder="Name, class, parent, phone"
+                  className="w-full border border-sectionBg rounded-lg px-4 py-2 focus:outline-none focus:border-primary"
+                />
+              </div>
             </div>
           </div>
 
@@ -151,7 +166,9 @@ export const Attendance = () => {
 
               <div className="bg-cardBg rounded-lg shadow-sm">
                 {filteredStudents.length === 0 ? (
-                  <div className="p-6 text-center text-secondaryText">No students in this batch</div>
+                  <div className="p-6 text-center text-secondaryText">
+                    {normalizedSearch ? 'No students match your search' : 'No students in this batch'}
+                  </div>
                 ) : (
                   filteredStudents.map((student) => (
                     <div key={student._id} className="flex items-center justify-between px-6 py-4 border-b border-sectionBg hover:bg-sectionBg">

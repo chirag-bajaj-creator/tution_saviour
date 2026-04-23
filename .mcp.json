@@ -2,7 +2,17 @@
   "mcpServers": {
     "excel-memory": {
       "command": "python",
-      "args": ["C:/Users/CHIRAG BAJAJ/OneDrive/AppData/Desktop/Template/excel_memory/memory_server.py"]
+      "args": [
+        "C:/Users/CHIRAG BAJAJ/OneDrive/AppData/Desktop/Template/excel_memory/memory_server.py"
+      ]
+    },
+    "code-review-graph": {
+      "command": "uvx",
+      "args": [
+        "code-review-graph",
+        "serve"
+      ],
+      "type": "stdio"
     }
   }
 }

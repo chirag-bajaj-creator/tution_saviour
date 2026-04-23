@@ -1,3 +1,63 @@
 @tailwind base;
 @tailwind components;
 @tailwind utilities;
+
+html,
+body,
+#root {
+  width: 100%;
+  min-width: 0;
+  min-height: 100%;
+  overflow-x: hidden;
+}
+
+* {
+  box-sizing: border-box;
+}
+
+img,
+svg,
+video,
+canvas {
+  max-width: 100%;
+}
+
+main,
+section,
+article,
+aside,
+nav,
+form,
+table {
+  min-width: 0;
+}
+
+table {
+  width: 100%;
+}
+
+@media (max-width: 768px) {
+  h1,
+  h2 {
+    overflow-wrap: anywhere;
+  }
+
+  .min-h-screen {
+    min-height: 100dvh;
+  }
+
+  .fixed.bottom-0 {
+    padding-inline: 0.35rem !important;
+  }
+
+  .fixed.bottom-0 > div {
+    max-width: 100% !important;
+    gap: 0.2rem;
+  }
+
+  .fixed.bottom-0 a {
+    min-width: 0;
+    flex: 1 1 0;
+    padding-inline: 0.25rem !important;
+  }
+}

@@ -2,9 +2,12 @@ const Fee = require('../models/Fee');
 
 const list = async (req, res) => {
   try {
-    const fees = await Fee.find().lean();
-    console.log('✅ Fees fetched:', fees.length);
-    console.log('📌 First fee studentId:', fees[0]?.studentId);
+    const fees = await Fee.find()
+      .populate({
+        path: 'studentId',
+        select: 'name class parentName',
+      })
+      .lean();
     res.json(fees);
   } catch (err) {
     res.status(500).json({ error: err.message });
@@ -28,6 +31,10 @@ const create = async (req, res) => {
       path: 'studentId',
       select: 'name class parentName',
     });
+
+    const io = req.app.get('io');
+    io.emit('fees:updated', fee);
+
     res.status(201).json(fee);
   } catch (err) {
     res.status(500).json({ error: err.message });
@@ -46,6 +53,10 @@ const update = async (req, res) => {
       path: 'studentId',
       select: 'name class parentName',
     });
+
+    const io = req.app.get('io');
+    io.emit('fees:updated', fee);
+
     res.json(fee);
   } catch (err) {
     res.status(500).json({ error: err.message });
